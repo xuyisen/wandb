@@ -343,7 +343,7 @@ func (m *Model) isAwaitingUserInput() bool {
 	}
 	switch m.mode {
 	case viewModeWorkspace:
-		return m.workspace.IsFiltering()
+		return m.workspace.IsFiltering() || m.workspace.pendingSelectAll != nil
 	case viewModeRun:
 		return m.run.IsFiltering()
 	case viewModeInspect:

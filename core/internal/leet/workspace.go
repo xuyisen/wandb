@@ -47,6 +47,9 @@ type Workspace struct {
 	selectedRuns map[string]bool // runDirName -> selected
 	pinnedRun    string          // runDirName or ""
 
+	// pendingSelectAll lists the runs ctrl+a will select once y confirms.
+	pendingSelectAll []string
+
 	// hasLiveRuns caches whether any selected run is in RunStateRunning.
 	hasLiveRuns atomic.Bool
 
@@ -1237,6 +1240,12 @@ func (w *Workspace) buildStatusText() string {
 	// Grid layout prompt (rows/cols) for metrics/system grids.
 	if w.config != nil && w.config.IsAwaitingGridConfig() {
 		return w.config.GridConfigStatus()
+	}
+
+	if w.pendingSelectAll != nil {
+		return fmt.Sprintf(
+			"Select all matching runs (%d to load)? Press y to confirm (ESC to cancel)",
+			len(w.pendingSelectAll))
 	}
 
 	return w.buildActiveStatus()
