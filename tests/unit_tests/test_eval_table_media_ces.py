@@ -275,8 +275,12 @@ def test_media_for_another_run_is_copied_before_binding(run_factory, tmp_path):
     destination_run._publish_file.assert_called_once()
 
 
-def test_ces_eval_table_supports_images():
-    assert _media_ces.SUPPORTED_WANDB_MEDIA_TYPES == (wandb.Image,)
+def test_ces_eval_table_supports_registered_media_types():
+    assert _media_ces.SUPPORTED_WANDB_MEDIA_TYPES == (
+        wandb.Image,
+        wandb.Audio,
+        wandb.Video,
+    )
 
 
 def test_prepare_image_creates_ces_extension_value(run_factory, tmp_path):
@@ -343,10 +347,10 @@ def test_prepare_audio_and_video_creates_ces_extension_value(
     media, path = _audio_or_video_with_local_file(tmp_path, media_kind, caption=caption)
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
 
-    prepared = _eval_table_media_ces.prepare_media(
+    prepared = _media_ces.prepare_media(
         media,
         run,
-        _eval_table_media_ces.EvalTableMediaField(
+        _media_ces.EvalTableMediaField(
             eval_table_key="eval/key",
             source="inputs",
             column_name="media",
@@ -359,7 +363,7 @@ def test_prepare_audio_and_video_creates_ces_extension_value(
         subdir,
         "eval",
         "key",
-        f"{digest[:30]}{path.suffix}",
+        f"{digest[: _media_ces._DIGEST_PATH_LENGTH]}{path.suffix}",
     )
     assert prepared.value == {
         "caption": caption,
@@ -372,6 +376,8 @@ def test_prepare_audio_and_video_creates_ces_extension_value(
         + expected_path.replace(os.sep, "/"),
         **extra,
     }
+    assert media._run is None
+    assert media._path == str(path)
 
 
 def test_committed_artifact_image_preserves_artifact_ref_url(
